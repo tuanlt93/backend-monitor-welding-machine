@@ -1,0 +1,23 @@
+CFG_MODBUS_RTU:
+  port    : COM20
+  baudrate: 9600
+  bytesize: 8
+  parity  : N
+  stopbits: 1
+  timeout : 1.0
+
+CFG_MODBUS_TCP:
+  host: 127.0.0.1
+  port: 502
+  unit: 16
+
+CFG_INFLUXDB:
+  username      : 
+  password      : 
+  host          : 127.0.0.1
+  port          : 27017
+
+CFG_SERVER:
+  host: 0.0.0.0
+  port: 5000
+  threads: 100
