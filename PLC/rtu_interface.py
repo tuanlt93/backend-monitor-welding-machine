@@ -1,10 +1,9 @@
 from pymodbus.client.sync import ModbusSerialClient
-from utils.pattern import Singleton
 from utils.logger import Logger
 import threading
 import time
 
-class RtuInterface(metaclass=Singleton):
+class RtuInterface():
     def __init__(self, *args, **kwargs) -> None:
         """
         Initializes the connection parameters for the PLC station.
@@ -95,7 +94,7 @@ class RtuInterface(metaclass=Singleton):
                     Logger().error(f"Error reading from PLC: {e}")
         else:
             self.__connect()
-        return [None]
+        return []
     
 
     def write_datas(self, address: int, values: list[int], slave_id: int) -> bool:

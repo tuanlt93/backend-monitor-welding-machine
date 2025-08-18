@@ -4,17 +4,21 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database.sqlite.models import Base, ConfigWeldMachine
+from utils.logger import Logger
+from utils.pattern import Singleton
 
-class SqliteHandle:
+class SqliteHandle(metaclass=Singleton):
     """
     Repository class quản lý CRUD cho bảng ConfigWeldMachine.
     """
-
-    def __init__(self, db_url: str = "sqlite:///ConfigWeldMachine.db", echo: bool = False):
-        self.engine = create_engine(db_url, echo=echo, future=True)
-        Base.metadata.create_all(self.engine)
+    def __init__(self, *args, **kwargs) -> None:
+        self.__db_url = kwargs.get('url', "sqlite:///ConfigWeldMachine.db")
+        self.__engine = create_engine(self.__db_url, echo= False, future= True)
+        Base.metadata.create_all(self.__engine)
         # expire_on_commit=False để object vẫn giữ giá trị sau commit
-        self.Session = sessionmaker(bind=self.engine, expire_on_commit=False, future=True)
+        self.Session = sessionmaker(bind=self.__engine, expire_on_commit=False, future=True)
+
+        Logger().info("SQLITE READY")
 
     # ---------------------------
     # Create / Add

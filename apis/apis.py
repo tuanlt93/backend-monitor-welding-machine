@@ -1,6 +1,8 @@
 from apis.api_base import ApiBase
 from apis.response_format import ResponseFomat
-from database import sqlite_handle
+from database import sqlite_handle, influx_handle
+from PLC import Plc_handle
+from config.constants import InfluxConfig, WeldingConfig
 
 
 class AddConfig(ApiBase):
@@ -11,6 +13,7 @@ class AddConfig(ApiBase):
 
     def __init__(self) -> None:
         self.__sqlite_handle = sqlite_handle
+        self.__Plc_handle = Plc_handle
         return super().__init__()
 
     @ApiBase.exception_error
@@ -33,6 +36,7 @@ class AddConfig(ApiBase):
                                             volt_min= data['volt_min']
                                             )
         if result:
+            self.__Plc_handle.get_plan()
             return ApiBase.createResponseMessage({}, msg)
         return ApiBase.createConflict(msg)
         
@@ -45,6 +49,7 @@ class DeleteConfig(ApiBase):
 
     def __init__(self) -> None:
         self.__sqlite_handle = sqlite_handle
+        self.__Plc_handle = Plc_handle
         return super().__init__()
 
     @ApiBase.exception_error
@@ -58,6 +63,7 @@ class DeleteConfig(ApiBase):
         data = self.jsonParser(args, args)
         result = self.__sqlite_handle.delete_by_id(id= data['id'])
         if result > 0:
+            self.__Plc_handle.get_plan()
             return ApiBase.createResponseMessage({}, f"Xóa thành công {result} cài đặt")
         return ApiBase.createNotImplement()
     
@@ -70,6 +76,7 @@ class EditConfig(ApiBase):
 
     def __init__(self) -> None:
         self.__sqlite_handle = sqlite_handle
+        self.__Plc_handle = Plc_handle
         return super().__init__()
 
     @ApiBase.exception_error
@@ -92,6 +99,7 @@ class EditConfig(ApiBase):
                                                     volt_min= data['volt_min']
                                                 )
         if result:
+            self.__Plc_handle.get_plan()
             return ApiBase.createResponseMessage({}, msg)
         return ApiBase.createConflict(msg)
 
@@ -110,11 +118,51 @@ class GetAllConfig(ApiBase):
 
     @ApiBase.exception_error
     def get(self):
-        """
-        """
-        datas = self.jsonParser([], [])
+        resp = self.jsonParser([], [])
         results = self.__sqlite_handle.get_all()
         for result in results:
-            datas[f'{result['name']}'] = result
-        return ApiBase.createResponseMessage(datas)
+            resp[f'{result['name']}'] = result
+        return ApiBase.createResponseMessage(resp)
+    
+
+class GetAllValueLatest(ApiBase):
+    """
+        {
+            'Máy Hàn A': {'voltage': 814.53125, 'ampere': 2750.0, 'time': 1755461173}, 
+            'Máy Hàn F': {'voltage': 4323.28125, 'ampere': 7466.25, 'time': 1755461173}
+        }
+    """
+    urls = ("/monitor/latest",)
+
+    def __init__(self) -> None:
+        self.__influx_handle = influx_handle
+        return super().__init__()
+
+    @ApiBase.exception_error
+    def get(self):
+        resp = self.jsonParser([], [])
+        volt_datas: dict = self.__influx_handle.read_latest(InfluxConfig.VOLT_POINT)
+        ampe_datas: dict = self.__influx_handle.read_latest(InfluxConfig.AMPE_POINT)
+
+        resp = {}
+
+        for key, vdata in volt_datas.items():
+            adata = ampe_datas.get(key)
+            if not vdata or not adata:
+                resp[key] = []
+                continue
+
+            v = vdata.get("voltage")
+            a = adata.get("ampere")
+
+            if v > WeldingConfig.VOLT_MIN:
+                if a > WeldingConfig.AMPE_MIN:
+                    resp[key] = [f'Điện áp: {v:.2f} V', f'Dòng điện: {a:.2f} A']
+                else:
+                    resp[key] = [f'Điện áp: {v:.2f} V']
+            else:
+                resp[key] = [f'Điện áp: 0.0 V']
+
+
+        return ApiBase.createResponseMessage(resp)
     

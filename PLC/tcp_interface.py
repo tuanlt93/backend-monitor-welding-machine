@@ -1,10 +1,9 @@
 from pymodbus.client.sync import ModbusTcpClient
-from utils.pattern import Singleton
 from utils.logger import Logger
 import threading
 import time
 
-class TcpInterface(metaclass=Singleton):
+class TcpInterface():
     def __init__(self, *args, **kwargs) -> None:
         """
         Initializes the connection parameters for the PLC station.

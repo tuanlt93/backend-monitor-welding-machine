@@ -10,7 +10,6 @@ def convert_date(date_str: str) -> str:
     return formatted_date
 
 
-
 class VnCommonFormat:
 	FULL		= 'DD-MM-YYYY HH:mm:ss'
 	INV_FULL	= "HH:mm:ss DD-MM-YYYY"
@@ -21,19 +20,6 @@ class VnCommonFormat:
 	DATE_MONTH 	= "DD/MM"
 
 class VnTimestamp:
-	@staticmethod
-	def today_8am():
-		dateNow = arrow.utcnow().date()
-		hourNow = arrow.utcnow().time().hour
-		if hourNow >=8:
-			return(arrow.get(dateNow).shift(hours=8).timestamp - 25200)
-		else:
-			return(arrow.get(dateNow).shift(hours=-16).timestamp - 25200)
-	
-	@staticmethod
-	def tomorrow_8am():
-		tomorrow = VnTimestamp.today_8am() +  86400
-		return tomorrow
 
 	@staticmethod
 	def now() -> float:
@@ -41,6 +27,10 @@ class VnTimestamp:
 		Return current timestamp
 		"""
 		return arrow.get(arrow.utcnow().shift(hours=7), locale="vi-vn").timestamp()
+	
+	@staticmethod
+	def now_s() -> int:
+		return int(arrow.utcnow().float_timestamp)
 
 	@staticmethod
 	def work_start(date):
@@ -69,6 +59,7 @@ class VnTimestamp:
 	def day_end(date):
 		return arrow.get(date, "DD-MM-YYYY").shift(days=1).timestamp - 1
 
+	@staticmethod
 	def today_start():
 		dateNow = arrow.utcnow().date()
 		return(arrow.get(dateNow).timestamp - 25200)

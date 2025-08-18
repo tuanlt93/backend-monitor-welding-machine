@@ -8,5 +8,6 @@ config_all = load_config(url= cfg_path)
 
 CFG_MODBUS_RTU  = config_all['CFG_MODBUS_RTU']
 CFG_MODBUS_TCP  = config_all['CFG_MODBUS_TCP']
-CFG_INFLUXDB     = config_all['CFG_INFLUXDB']
+CFG_INFLUXDB    = config_all['CFG_INFLUXDB']
 CFG_SERVER      = config_all['CFG_SERVER']
+CFG_SQLITE      = config_all['CFG_SQLITE']
