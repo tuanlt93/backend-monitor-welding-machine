@@ -14,4 +14,3 @@ CFG_INFLUXDB['token'] = token
 sqlite_handle = SqliteHandle(**CFG_SQLITE)
 
 influx_handle = InfluxHandle(**CFG_INFLUXDB)
-# influx_handle.sqlite_handle = sqlite_handle

@@ -1,5 +1,5 @@
 CFG_MODBUS_RTU:
-  port    : COM3
+  port    : COM20
   baudrate: 9600
   bytesize: 8
   parity  : N

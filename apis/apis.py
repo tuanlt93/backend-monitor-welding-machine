@@ -2,14 +2,14 @@ from apis.api_base import ApiBase
 from apis.response_format import ResponseFomat
 from database import sqlite_handle, influx_handle
 from PLC import Plc_handle
-from config.constants import InfluxConfig, WeldingConfig
+from config.constants import InfluxConfig, WeldingConfig, StatusMachine
 
 
-class AddConfig(ApiBase):
+class CreateConfig(ApiBase):
     """
         Thông tin sau khi thùng carton đi qua DWS
     """
-    urls = ("/config/add",)
+    urls = ("/config/create",)
 
     def __init__(self) -> None:
         self.__sqlite_handle = sqlite_handle
@@ -19,11 +19,11 @@ class AddConfig(ApiBase):
     @ApiBase.exception_error
     def post(self):
         """
-            API_ADD_CONFIG = [ 
+            API_CREATE_CONFIG = [ 
                 "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
             ]
         """
-        args = ResponseFomat.API_ADD_CONFIG
+        args = ResponseFomat.API_CREATE_CONFIG
         data = self.jsonParser(args, args)
         result, msg = self.__sqlite_handle.add(id= data['id'],
                                             name= data['name'],
@@ -106,9 +106,9 @@ class EditConfig(ApiBase):
 
 class GetAllConfig(ApiBase):
     """
-        [ 
+        "machine" :{
             "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
-        ]
+        }
     """
     urls = ("/config/getall",)
 
@@ -128,8 +128,8 @@ class GetAllConfig(ApiBase):
 class GetAllValueLatest(ApiBase):
     """
         {
-            'Máy Hàn A': {'voltage': 814.53125, 'ampere': 2750.0, 'time': 1755461173}, 
-            'Máy Hàn F': {'voltage': 4323.28125, 'ampere': 7466.25, 'time': 1755461173}
+            'Máy Hàn A': {'voltage': 814.53125, 'ampere': 2750.0}, 
+            'Máy Hàn F': {'voltage': 4323.28125, 'ampere': 7466.25}
         }
     """
     urls = ("/monitor/latest",)
@@ -143,26 +143,88 @@ class GetAllValueLatest(ApiBase):
         resp = self.jsonParser([], [])
         volt_datas: dict = self.__influx_handle.read_latest(InfluxConfig.VOLT_POINT)
         ampe_datas: dict = self.__influx_handle.read_latest(InfluxConfig.AMPE_POINT)
-
+        
         resp = {}
 
         for key, vdata in volt_datas.items():
             adata = ampe_datas.get(key)
-            if not vdata or not adata:
-                resp[key] = []
-                continue
-
+        
             v = vdata.get("voltage")
             a = adata.get("ampere")
+            id = vdata.get("id")
 
-            if v > WeldingConfig.VOLT_MIN:
-                if a > WeldingConfig.AMPE_MIN:
-                    resp[key] = [f'Điện áp: {v:.2f} V', f'Dòng điện: {a:.2f} A']
-                else:
-                    resp[key] = [f'Điện áp: {v:.2f} V']
+            if v is None or a is None:
+                resp[key] = {
+                        'voltage': 0.0,
+                        'ampere' : 0.0,
+                        'id'     : id,
+                        'status' : StatusMachine.DISCONNECT
+                    }
+                continue
+
+            if v < WeldingConfig.VOLT_MIN and a < WeldingConfig.AMPE_MIN:
+                resp[key] = {
+                        'voltage': 0.0,
+                        'ampere' : 0.0,
+                        'id'     : id,
+                        'status' : StatusMachine.IDEL
+                    }
             else:
-                resp[key] = [f'Điện áp: 0.0 V']
+                resp[key] = {
+                    'voltage': v,
+                    'ampere' : a,
+                    'id'     : id,
+                    'status' : StatusMachine.RUNNING
+                }
 
 
         return ApiBase.createResponseMessage(resp)
+    
+
+class GetInfoMinitor(ApiBase):
+    """
+        {
+        "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
+        }
+    """
+    urls = ("/monitor/getinfo",)
+
+    def __init__(self) -> None:
+        self.__sqlite_handle = sqlite_handle
+        return super().__init__()
+
+    @ApiBase.exception_error
+    def post(self):
+        args = ResponseFomat.API_POST_INFO
+        msg = self.jsonParser(args, args)
+        result = self.__sqlite_handle.get_by_id(msg)
+        
+        if result:
+            return ApiBase.createResponseMessage(result)
+        
+        return ApiBase.createConflict("Don't find id")
+    
+
+class GetMachineData(ApiBase):
+    """
+        {
+        "name"
+        }
+    """
+    urls = ("/monitor/machine/data",)
+
+    def __init__(self) -> None:
+        self.__influx_handle = influx_handle
+        return super().__init__()
+
+    @ApiBase.exception_error
+    def post(self):
+        args = ResponseFomat.API_POST_MACHINE_DATA
+        msg = self.jsonParser(args, args)
+
+        result = self.__influx_handle.read_data_today(msg['name'])
+        if result:
+            return ApiBase.createResponseMessage(result)
+        return ApiBase.createConflict("Don't find name")
+        
     

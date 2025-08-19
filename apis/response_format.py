@@ -1,5 +1,5 @@
 class ResponseFomat:
-    API_ADD_CONFIG = [ 
+    API_CREATE_CONFIG = [ 
         "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
     ]
 
@@ -9,5 +9,13 @@ class ResponseFomat:
     
     API_EDIT_CONFIG = [ 
         "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
+    ]
+
+    API_POST_INFO = [ 
+        "id"
+    ]
+
+    API_POST_MACHINE_DATA = [ 
+        "name"
     ]
 

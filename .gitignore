@@ -6,4 +6,5 @@
 **server.spec
 **Logs
 test*.py
-delete**
+delete*
+*.env
