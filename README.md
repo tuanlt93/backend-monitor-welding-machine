@@ -17,7 +17,7 @@ Register 5: ampere value\
 Value voltage min: 0\
 Value voltage max: 100\
 Value ampere min: 0\
-Value ampere max: 100\
+Value ampere max: 1000\
 Resolution: 65535
 
 ## Example
