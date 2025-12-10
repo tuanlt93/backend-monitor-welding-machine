@@ -7,7 +7,7 @@ class InfluxConfig(metaclass = Singleton):
     VOLT_FEILD          = 'voltage'
     AMPE_FEILD          = 'ampere'
     LATEST_READ_TIME    = 10
-    SAMPLE_READ_TIME    = 120
+    SAMPLE_READ_TIME    = 60
 
 class WeldingConfig(metaclass = Singleton):
     AMPE_MIN = 10

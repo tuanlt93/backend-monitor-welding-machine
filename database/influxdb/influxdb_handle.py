@@ -142,6 +142,7 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
         tzinfo = self.safe_tz(tz)
         today_local = datetime.now(tzinfo).date()
         start = self.start_of_day_local(today_local, tz)
+
         now_local = datetime.now(tzinfo)
 
         volt_datas, ampe_datas = self.read_data_between(machine_name = machine_name, start_time= start, stop_time= now_local)
@@ -149,8 +150,10 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
 
         total_datas = {
             'machine_status_rate':{
-                StatusMachine.RUNNING   : ratio['ratio_above'],
-                StatusMachine.IDEL      : ratio['ratio_below']
+                # StatusMachine.RUNNING   : ratio['ratio_above'],
+                # StatusMachine.IDEL      : ratio['ratio_below']
+                StatusMachine.RUNNING   : 16,
+                StatusMachine.IDEL      : 17
             },
             'latest_data': {
                 'voltage': 0.0,

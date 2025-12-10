@@ -56,9 +56,14 @@ class InfluxInterface:
     def to_utc_rfc3339(self, dt: datetime) -> str:
         return dt.astimezone(timezone.utc).isoformat()
 
+    # def start_of_day_local(self, d: date, tz: str) -> datetime:
+    #     tzinfo = self.safe_tz(tz)
+    #     return datetime.combine(d, dtime.min).replace(tzinfo=tzinfo)
+
     def start_of_day_local(self, d: date, tz: str) -> datetime:
         tzinfo = self.safe_tz(tz)
-        return datetime.combine(d, dtime.min).replace(tzinfo=tzinfo)
+        previous_day = d - timedelta(days=1)
+        return datetime.combine(previous_day, dtime.min).replace(tzinfo=tzinfo)
     
 
     def date_to_timestamp(self, dt: datetime, tz: str = "UTC") -> int:
