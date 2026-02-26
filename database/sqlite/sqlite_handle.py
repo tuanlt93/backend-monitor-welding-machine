@@ -34,8 +34,7 @@ class SqliteHandle(metaclass=Singleton):
         volt_max: float,
         volt_min: float,
         ampe_max: float,
-        ampe_min: float,
-        mc_type: int
+        ampe_min: float
     ) -> Tuple[bool, Optional[str]]:
         """
         """
@@ -49,8 +48,7 @@ class SqliteHandle(metaclass=Singleton):
             volt_min=volt_min,
             ampe_max=ampe_max,
             ampe_min=ampe_min,
-            date_time=datetime.now(),
-            mc_type=mc_type
+            date_time=datetime.now()
         )
 
         with self.Session() as s:
@@ -77,7 +75,6 @@ class SqliteHandle(metaclass=Singleton):
             "ampe_min": rec.ampe_min,
             "volt_max": rec.volt_max,
             "volt_min": rec.volt_min,
-            "mc_type": rec.mc_type,
         }
 
     def add_many(self, records: Iterable[ConfigWeldMachine]) -> List[ConfigWeldMachine]:
@@ -144,8 +141,7 @@ class SqliteHandle(metaclass=Singleton):
             volt_max: float,
             volt_min: float,
             ampe_max: float,
-            ampe_min: float,
-            mc_type: int,
+            ampe_min: float
         ) -> Tuple[bool, Optional[str]]:
 
         """
@@ -160,8 +156,7 @@ class SqliteHandle(metaclass=Singleton):
             "ampe_min": ampe_min,
             "volt_max": volt_max,
             "volt_min": volt_min,
-            "date_time": datetime.now(),
-            "mc_type": mc_type
+            "date_time": datetime.now()
         }
         for key, value in update_data.items():
             if value is None:

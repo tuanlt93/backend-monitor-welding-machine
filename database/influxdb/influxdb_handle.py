@@ -13,12 +13,8 @@ from database.influxdb.interface import InfluxInterface
 class InfluxHandle(InfluxInterface, metaclass=Singleton):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
-        # self.__url = kwargs.get('url', "http://localhost:8086")
-        # self.__org = kwargs.get('org', "xmax")
-
-        self.__url = kwargs.get('url', "http://103.186.149.166:8086/")
-        self.__org = kwargs.get('org', "influxdata-org")
-
+        self.__url = kwargs.get('url', "http://localhost:8086")
+        self.__org = kwargs.get('org', "xmax")
         self.__bucket = kwargs.get('bucket', "monitor_welding_machines")
         self.__token = kwargs.get('token', "")
 
@@ -83,7 +79,7 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
             self.__tags[(slave['name'])] = slave['slave_id']
 
 
-    def write_sample(self,* , machine_name: str, volt_value: float, ampe_value: float, run_time: int, machineStatus: int, machine_energy_cs_value: float,wire_speed_value: float, wire_cs_value: float, gas_amount_value: float):
+    def write_sample(self,* , machine_name: str, volt_value: float, ampe_value: float):
         """
             Ghi dữ liệu với thời gian utc
         """
@@ -92,38 +88,8 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
         
         p2 = Point(InfluxConfig.AMPE_POINT).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
               .field(InfluxConfig.AMPE_FEILD, float(ampe_value)).time(datetime.utcnow(), WritePrecision.S)
-        
-        p3 = Point(InfluxConfig.RUN_TIME_POINT).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-              .field(InfluxConfig.RUN_TIME_FEILD, int(run_time)).time(datetime.utcnow(), WritePrecision.S)
-        
-        p4 = Point(InfluxConfig.MACHINE_STT_POINT).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-              .field(InfluxConfig.MACHINE_STT_FEILD, int(machineStatus)).time(datetime.utcnow(), WritePrecision.S)
-        
-        p5 = Point(InfluxConfig.MACHINE_ENERGY_CS_POINT).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-              .field(InfluxConfig.MACHINE_ENERGY_CS_FEILD, int(machine_energy_cs_value)).time(datetime.utcnow(), WritePrecision.S)
-        
-        p6 = Point(InfluxConfig.WIRE_SPEED_POINT).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-              .field(InfluxConfig.WIRE_SPEED_FEILD, int(wire_speed_value)).time(datetime.utcnow(), WritePrecision.S)
-        
-        p7 = Point(InfluxConfig.WIRE_CS_POINT).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-              .field(InfluxConfig.WIRE_CS_FEILD, int(wire_cs_value)).time(datetime.utcnow(), WritePrecision.S)
-        
-        p8 = Point(InfluxConfig.GAS_AMOUNT_POINT).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-              .field(InfluxConfig.GAS_AMOUNT_FEILD, int(gas_amount_value)).time(datetime.utcnow(), WritePrecision.S)
-        
-        # p1 = Point(machine_name).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-        #       .field(InfluxConfig.VOLT_FEILD, float(volt_value)).time(datetime.utcnow(), WritePrecision.S)
-        
-        # p2 = Point(machine_name).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-        #       .field(InfluxConfig.AMPE_FEILD, float(ampe_value)).time(datetime.utcnow(), WritePrecision.S)
-        
-        # p3 = Point(machine_name).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-        #       .field(InfluxConfig.RUN_TIME_FEILD, int(run_time)).time(datetime.utcnow(), WritePrecision.S)
-        
-        # p4 = Point(machine_name).tag(InfluxConfig.MACHINE_NAME_TAG, machine_name) \
-        #       .field(InfluxConfig.MACHINE_STT_FEILD, int(machineStatus)).time(datetime.utcnow(), WritePrecision.S)
-        
-        self.__write.write(bucket=self.__bucket, org=self.__org, record=[p1, p2, p3, p4, p5, p6, p7, p8])
+
+        self.__write.write(bucket=self.__bucket, org=self.__org, record=[p1, p2])
 
 
     def read_latest(self, measurement: str) -> Dict:
@@ -137,8 +103,7 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
         }
         """
 
-        field_query = self.build_field_filter([InfluxConfig.VOLT_FEILD, InfluxConfig.AMPE_FEILD, InfluxConfig.MACHINE_STT_FEILD])
-        # field_query = self.build_field_filter([InfluxConfig.MACHINE_NAME_TAG, InfluxConfig.MACHINE_STT_POINT])
+        field_query = self.build_field_filter([InfluxConfig.VOLT_FEILD, InfluxConfig.AMPE_FEILD])
         tags_query = self.build_tag_filters(self.__tags)
         tags_cfg = self.__tags.copy()
 
@@ -180,7 +145,7 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
 
         now_local = datetime.now(tzinfo)
 
-        volt_datas, ampe_datas, mcstt_datas = self.read_data_between(machine_name = machine_name, start_time= start, stop_time= now_local)
+        volt_datas, ampe_datas = self.read_data_between(machine_name = machine_name, start_time= start, stop_time= now_local)
         ratio = self.duration_above_below(machine_name = machine_name, start_time= start, stop_time= now_local)
 
         total_datas = {
@@ -209,17 +174,10 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
         v = volt_datas[-1]['value']
         a = ampe_datas[-1]['value']
         
-        # if v < WeldingConfig.VOLT_MIN and a < WeldingConfig.AMPE_MIN:
-        #     total_datas['latest_data']['status'] = StatusMachine.IDEL
-        # else:
-        #     total_datas['latest_data']['status'] = StatusMachine.RUNNING
-
-        if mcstt_datas[-1]['value'] == 1:
+        if v < WeldingConfig.VOLT_MIN and a < WeldingConfig.AMPE_MIN:
             total_datas['latest_data']['status'] = StatusMachine.IDEL
         else:
-            if mcstt_datas[-1]['value'] == 2:
-                total_datas['latest_data']['status'] = StatusMachine.RUNNING
-
+            total_datas['latest_data']['status'] = StatusMachine.RUNNING
         total_datas['latest_data']['ampere'] = a
         total_datas['latest_data']['voltage'] = v
 
@@ -227,8 +185,8 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
         return total_datas
 
 
-    def read_data_between(self,* , machine_name: str, start_time: datetime, stop_time: datetime) -> Tuple[List, List, List]:
-        field_query = self.build_field_filter([InfluxConfig.AMPE_FEILD, InfluxConfig.VOLT_FEILD, InfluxConfig.MACHINE_STT_FEILD])
+    def read_data_between(self,* , machine_name: str, start_time: datetime, stop_time: datetime) -> Tuple[List, List]:
+        field_query = self.build_field_filter([InfluxConfig.AMPE_FEILD, InfluxConfig.VOLT_FEILD])
         tags_query = self.build_tag_filters([machine_name])
 
         cmd_flux_ape = f'''
@@ -258,20 +216,7 @@ class InfluxHandle(InfluxInterface, metaclass=Singleton):
         records = [rec for tbl in tables for rec in tbl.records]
         volt_datas = self.parse_records(records)
 
-        cmd_flux_mcstt = f'''
-        from(bucket: "{self.__bucket}")
-        |> range(start: time(v: "{self.to_utc_rfc3339(start_time)}"),
-                stop:  time(v: "{self.to_utc_rfc3339(stop_time)}"))
-        |> filter(fn: (r) => r["_measurement"] == "{InfluxConfig.MACHINE_STT_POINT}"){field_query}{tags_query}
-        |> aggregateWindow(every: {InfluxConfig.SAMPLE_READ_TIME}s, fn: last, createEmpty: false)
-        |> keep(columns: ["_time","_value","_field","_measurement","{InfluxConfig.MACHINE_NAME_TAG}","location"])
-        |> sort(columns: ["_time"])
-        '''
-        tables = self.__query.query(cmd_flux_mcstt, org=self.__org)
-        records = [rec for tbl in tables for rec in tbl.records]
-        mcstt_datas = self.parse_records(records)
-
-        return volt_datas, ampe_datas,mcstt_datas
+        return volt_datas, ampe_datas
 
 
     def duration_above_below(self,*, machine_name: str, start_time: datetime, stop_time: datetime) -> Dict[str, float]:

@@ -1,6 +1,6 @@
 class ResponseFomat:
     API_CREATE_CONFIG = [ 
-        "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min", "mc_type"
+        "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
     ]
 
     API_DELETE_CONFIG = [ 
@@ -8,7 +8,7 @@ class ResponseFomat:
     ]
     
     API_EDIT_CONFIG = [ 
-        "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min", "mc_type"
+        "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
     ]
 
     API_POST_INFO = [ 

@@ -1,25 +1,20 @@
 CFG_MODBUS_RTU:
-  port    : COM3
+  port    : COM20
   baudrate: 9600
   bytesize: 8
   parity  : N
-  stopbits: 1
-  timeout : 0.5
+  stopbits: 2
+  timeout : 1.0
 
 CFG_MODBUS_TCP:
   host    : 127.0.0.1
   port    : 502
   unit    : 16
 
-# CFG_INFLUXDB:
-#   url     : http://localhost:8086
-#   org     : xmax
-#   bucket  : monitor_welding_machines
-
 CFG_INFLUXDB:
-  url     : http://103.186.149.166:8086/
-  org     : influxdata-org
-  bucket  : monitor_welding_machines_test
+  url     : http://localhost:8086
+  org     : xmax
+  bucket  : monitor_welding_machines
 
 CFG_SQLITE:
   url     : sqlite:///ConfigWeldMachine.db
