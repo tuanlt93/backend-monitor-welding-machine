@@ -3,7 +3,7 @@ from apis.response_format import ResponseFomat
 from database import sqlite_handle, influx_handle
 from PLC import Plc_handle
 from config.constants import InfluxConfig, WeldingConfig, StatusMachine
-
+from utils.logger import Logger
 
 class CreateConfig(ApiBase):
     """
@@ -20,7 +20,7 @@ class CreateConfig(ApiBase):
     def post(self):
         """
             API_CREATE_CONFIG = [ 
-                "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
+                "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min", "mc_type"
             ]
         """
         args = ResponseFomat.API_CREATE_CONFIG
@@ -33,7 +33,8 @@ class CreateConfig(ApiBase):
                                             ampe_max= data['ampe_max'],
                                             ampe_min= data['ampe_min'],
                                             volt_max= data['volt_max'],
-                                            volt_min= data['volt_min']
+                                            volt_min= data['volt_min'],
+                                            mc_type= data['mc_type']
                                             )
         if result:
             self.__Plc_handle.get_plan()
@@ -83,7 +84,7 @@ class EditConfig(ApiBase):
     def post(self):
         """
             API_EDIT_CONFIG = [ 
-                "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
+                "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min", "mc_type"
             ]
         """
         args = ResponseFomat.API_EDIT_CONFIG
@@ -96,7 +97,8 @@ class EditConfig(ApiBase):
                                                     ampe_max= data['ampe_max'],
                                                     ampe_min= data['ampe_min'],
                                                     volt_max= data['volt_max'],
-                                                    volt_min= data['volt_min']
+                                                    volt_min= data['volt_min'],
+                                                    mc_type= data['mc_type']
                                                 )
         if result:
             self.__Plc_handle.get_plan()
@@ -107,7 +109,7 @@ class EditConfig(ApiBase):
 class GetAllConfig(ApiBase):
     """
         "machine" :{
-            "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
+            "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min", "mc_type"
         }
     """
     urls = ("/config/getall",)
@@ -143,17 +145,51 @@ class GetAllValueLatest(ApiBase):
         resp = self.jsonParser([], [])
         volt_datas: dict = self.__influx_handle.read_latest(InfluxConfig.VOLT_POINT)
         ampe_datas: dict = self.__influx_handle.read_latest(InfluxConfig.AMPE_POINT)
-        
+        mcstatus_datas: dict = self.__influx_handle.read_latest(InfluxConfig.MACHINE_STT_POINT)
         resp = {}
+        # Logger().info(str(mcstatus_datas))
+        # Logger().info(str(volt_datas))
+        # Logger().info(str(ampe_datas))
+        # for key, vdata in volt_datas.items():
+        #     adata = ampe_datas.get(key)
+        
+        #     v = vdata.get("voltage")
+        #     a = adata.get("ampere")
+        #     id = vdata.get("id")
 
-        for key, vdata in volt_datas.items():
+        #     if v is None or a is None:
+        #         resp[key] = {
+        #                 'voltage': 0.0,
+        #                 'ampere' : 0.0,
+        #                 'id'     : id,
+        #                 'status' : StatusMachine.DISCONNECT
+        #             }
+        #         continue
+
+        #     if v < WeldingConfig.VOLT_MIN and a < WeldingConfig.AMPE_MIN:
+        #         resp[key] = {
+        #                 'voltage': 0.0,
+        #                 'ampere' : 0.0,
+        #                 'id'     : id,
+        #                 'status' : StatusMachine.IDEL
+        #             }
+        #     else:
+        #         resp[key] = {
+        #             'voltage': v,
+        #             'ampere' : a,
+        #             'id'     : id,
+        #             'status' : StatusMachine.RUNNING
+        #         }
+        for key, mcsttdata in mcstatus_datas.items():
             adata = ampe_datas.get(key)
+            vdata = volt_datas.get(key)
         
             v = vdata.get("voltage")
             a = adata.get("ampere")
             id = vdata.get("id")
-
-            if v is None or a is None:
+            mcstt = (mcsttdata.get("machine_status"))
+            # Logger().info(str(mcsttdata))
+            if mcstt == 0 or mcstt is None:
                 resp[key] = {
                         'voltage': 0.0,
                         'ampere' : 0.0,
@@ -162,7 +198,7 @@ class GetAllValueLatest(ApiBase):
                     }
                 continue
 
-            if v < WeldingConfig.VOLT_MIN and a < WeldingConfig.AMPE_MIN:
+            if mcstt == 1:
                 resp[key] = {
                         'voltage': 0.0,
                         'ampere' : 0.0,
@@ -177,14 +213,13 @@ class GetAllValueLatest(ApiBase):
                     'status' : StatusMachine.RUNNING
                 }
 
-
         return ApiBase.createResponseMessage(resp)
     
 
 class GetInfoMinitor(ApiBase):
     """
         {
-        "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min"
+        "id" , "name" , "volt_regs" , "ampe_regs" , "resolution" , "ampe_max" , "ampe_min" , "volt_max" , "volt_min", "mc_type"
         }
     """
     urls = ("/monitor/getinfo",)

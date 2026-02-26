@@ -19,6 +19,7 @@ class ConfigWeldMachine(Base):
     volt_min = Column(Float, nullable=False)      # áp tối thiểu
 
     date_time = Column(DateTime, nullable=False)      # time: date
+    mc_type   = Column(Integer, nullable=False)      # time: date
 
     def __repr__(self) -> str:
         return f"<ConfigWeldMachine id={self.id} name={self.name}>"
